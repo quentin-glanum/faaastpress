@@ -5,7 +5,8 @@
  *
  * @since 1.0.0
  */
-function faaastpress_remove_bloat($bloat_options) {
+function faaastpress_remove_bloat($bloat_options)
+{
     var_dump($bloat_options);
 
     if (in_array('disable_jquery_migrate', $bloat_options, true)) {
