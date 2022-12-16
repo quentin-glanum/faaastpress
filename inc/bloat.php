@@ -7,16 +7,36 @@
  */
 function faaastpress_remove_bloat($bloat_options)
 {
+    $theme = wp_get_theme();
     var_dump($bloat_options);
 
     if (in_array('disable_jquery_migrate', $bloat_options, true)) {
         add_action('wp_default_scripts', 'faaastpress_remove_jquery_migrate');
     }
+
     if (in_array('disable_emojis', $bloat_options, true)) {
         add_action('init', 'faaastpress_disable_emojis');
     }
+
     if (in_array('disable_dashicons', $bloat_options, true)) {
         add_action('wp_print_styles', 'faaastpress_adminify_remove_dashicons', 100);
+    }
+
+    if (in_array('remove_comment_url', $bloat_options, true)) {
+        add_action('author_link', 'faaastpress_author_page_redirect');
+        add_filter('get_comment_author_link', 'faaastpress_remove_comment_author_link', 10, 3);
+        add_action('after_setup_theme', 'faaastpress_add_comment_url_filter');
+        if ( 'GeneratePress' == $theme->name || 'GeneratePress' == $theme->parent_theme ) {
+            add_filter('generate_post_author_output', 'faaastpress_no_author_link');
+        }
+    }
+
+    if (in_array('remove_yoast_comments', $bloat_options, true)) {
+        add_filter('wpseo_debug_markers', '__return_false');
+    }
+
+    if (in_array('disable_color_scheme', $bloat_options, true)) {
+        remove_action('admin_color_scheme_picker', 'admin_color_scheme_picker');
     }
 }
 
@@ -43,6 +63,7 @@ function faaastpress_remove_jquery_migrate($scripts)
  */
 function faaastpress_disable_emojis()
 {
+    var_dump('toto');
     remove_action('wp_head', 'print_emoji_detection_script', 7);
     remove_action('admin_print_scripts', 'print_emoji_detection_script');
     remove_action('wp_print_styles', 'print_emoji_styles');
@@ -93,6 +114,12 @@ function faaastpress_adminify_remove_dashicons()
  * ================================
  *  Remove author page URL
  */
+function faaastpress_author_page_redirect($link)
+{
+    $link = '';
+    return $link;
+}
+
 function faaastpress_no_author_link()
 {
     printf(
@@ -106,15 +133,6 @@ function faaastpress_no_author_link()
         )
     );
 }
-add_filter('generate_post_author_output', 'faaastpress_no_author_link');
-
-function faaastpress_author_page_redirect($link)
-{
-    $link = '';
-
-    return $link;
-}
-add_action('author_link', 'faaastpress_author_page_redirect');
 
 /*
  * ================================
@@ -124,13 +142,11 @@ function faaastpress_remove_comment_author_link($return, $author, $comment_ID)
 {
     return $author;
 }
-add_filter('get_comment_author_link', 'faaastpress_remove_comment_author_link', 10, 3);
 
 /*
  * ================================
  *  Remove comment website URL
  */
-add_action('after_setup_theme', 'faaastpress_add_comment_url_filter');
 function faaastpress_add_comment_url_filter()
 {
     add_filter('comment_form_default_fields', 'faaastpress_disable_comment_url', 20);
@@ -145,12 +161,5 @@ function faaastpress_disable_comment_url($fields)
 
 /*
  * ================================
- *  Remove YOAST SEO HTML comments
+ *
  */
-add_filter('wpseo_debug_markers', '__return_false');
-
-/*
- * ================================
- * Disable color scheme from user dashboard
- */
-remove_action('admin_color_scheme_picker', 'admin_color_scheme_picker');
